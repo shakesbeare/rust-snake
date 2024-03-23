@@ -8,6 +8,8 @@ use rust_snake::snake::*;
 use rust_snake::*;
 
 fn main() {
+    #[cfg(target_arch="wasm32-unknown-unknown")]
+    wasm_logger::init(wasm_logger::Config::default());
     std::panic::set_hook(Box::new(console_error_panic_hook::hook));
     App::new()
         .insert_resource(SnakeSegments::default())

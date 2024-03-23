@@ -351,11 +351,19 @@ pub fn enter_name(
         leaderboard_event.send(ViewLeaderboardEvent);
     }
 
+    // wasm does not send ReceivedCharacter events for backspace
+    #[cfg(target_arch = "wasm32")]
+    if keyboard_input.just_pressed(KeyCode::Backspace) {
+        string.pop();
+    }
+
     for ev in ev_char.read() {
         if keyboard_input.just_pressed(KeyCode::Backspace) {
             string.pop();
             continue;
         }
+        // if keyboard_input.just_pressed(KeyCode::Backspace) {
+        // }
         if string.len() <= 10 && ev.char.is_ascii() {
             if ev.char == "\n" || ev.char == "\r" {
                 continue;
@@ -389,7 +397,7 @@ pub fn leaderboard(
         let mut texts = vec![];
         let hs_arc = HIGHSCORES.get().unwrap();
         let highscores = hs_arc.lock().unwrap();
-        for score in highscores.highscores.iter().rev() {
+        for score in highscores.highscores.iter() {
             texts.push(TextSection::new(
                 format!("{}: {}\n", score.name, score.score),
                 TextStyle {

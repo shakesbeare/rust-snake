@@ -96,6 +96,7 @@ pub fn download_scores(
 pub fn upload_scores(mut send_highscores: EventReader<SendHighscores>) {
     if let Some(ev) = send_highscores.read().next() {
         let highscore = ev.0.clone();
+        debug!("{:?}", serde_json::to_string(&highscore).unwrap());
         crate::run_async(async move {
             let mut fut = tokio::task::spawn_local(async move {
                 let client = reqwest::Client::new();

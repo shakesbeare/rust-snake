@@ -262,8 +262,6 @@ pub fn enter_name_screen(
     text: Query<Entity, With<crate::score::ScoreText>>,
     asset_server: Res<AssetServer>,
     mut leaderboard_place_earned: ResMut<crate::score::LeaderboardEarned>,
-    mut next_state: ResMut<NextState<GameState>>,
-    mut leaderboard_event: EventWriter<ViewLeaderboardEvent>,
     mut enter_name_event: EventReader<EnterNameEvent>,
     mut commands: Commands,
 ) {
@@ -279,45 +277,45 @@ pub fn enter_name_screen(
             i += 1;
         }
 
+        let mut highscore_text =
+            format!("Your score: {}\nEnter Name:\n", score.0);
         if i > 0 {
             *leaderboard_place_earned = LeaderboardEarned::Placed(i as u8);
-
-            commands
-                .spawn(
-                    TextBundle::from_sections([
-                        TextSection::new(
-                            "New High Score!\nEnter Name:\n",
-                            TextStyle {
-                                font: asset_server
-                                    .load("fonts/roboto-thin.ttf"),
-                                font_size: 50.,
-                                color: Color::BEIGE,
-                            },
-                        ),
-                        TextSection::new(
-                            "",
-                            TextStyle {
-                                font: asset_server
-                                    .load("fonts/roboto-thin.ttf"),
-                                font_size: 35.,
-                                color: Color::BEIGE,
-                            },
-                        ),
-                    ])
-                    .with_text_justify(JustifyText::Center)
-                    .with_style(Style {
-                        justify_self: JustifySelf::Center,
-                        align_self: AlignSelf::Center,
-                        position_type: PositionType::Absolute,
-                        ..default()
-                    }),
-                )
-                .insert(crate::score::ScoreText);
+            highscore_text =
+                format!("New Highscore!: {}\nEnter Name:", score.0);
         } else {
             *leaderboard_place_earned = LeaderboardEarned::NotPlaced;
-            next_state.set(GameState::ViewingLeaderboard);
-            leaderboard_event.send(ViewLeaderboardEvent);
         }
+
+        commands
+            .spawn(
+                TextBundle::from_sections([
+                    TextSection::new(
+                        highscore_text,
+                        TextStyle {
+                            font: asset_server.load("fonts/roboto-thin.ttf"),
+                            font_size: 50.,
+                            color: Color::BEIGE,
+                        },
+                    ),
+                    TextSection::new(
+                        "",
+                        TextStyle {
+                            font: asset_server.load("fonts/roboto-thin.ttf"),
+                            font_size: 35.,
+                            color: Color::BEIGE,
+                        },
+                    ),
+                ])
+                .with_text_justify(JustifyText::Center)
+                .with_style(Style {
+                    justify_self: JustifySelf::Center,
+                    align_self: AlignSelf::Center,
+                    position_type: PositionType::Absolute,
+                    ..default()
+                }),
+            )
+            .insert(crate::score::ScoreText);
     }
 }
 
@@ -325,7 +323,6 @@ pub fn enter_name(
     mut next_state: ResMut<NextState<GameState>>,
     mut ev_char: EventReader<ReceivedCharacter>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
-    leaderboard_place_earned: ResMut<crate::score::LeaderboardEarned>,
     mut string: Local<String>,
     mut text: Query<&mut Text, With<crate::score::ScoreText>>,
     mut leaderboard_event: EventWriter<ViewLeaderboardEvent>,
@@ -335,34 +332,17 @@ pub fn enter_name(
 ) {
     if keyboard_input.just_pressed(KeyCode::Enter) {
         *string = string.chars().filter(|c| c.is_alphanumeric()).collect();
-        if string.len() == 0 {
+        if (*string).is_empty() {
             *string = "Anonymous".to_string();
         }
-        // update scores resource
-        let hs_arc = HIGHSCORES.get().unwrap();
-        let mut highscores = hs_arc.lock().unwrap();
-        let mut scores = highscores.highscores.clone();
-        let LeaderboardEarned::Placed(i) = *leaderboard_place_earned else {
-            unreachable!();
-        };
-        scores.insert(
-            i.into(),
-            crate::score::Highscore {
-                name: string.clone(),
-                score: score.0,
-            },
-        );
-        scores = scores.into_iter().skip(1).collect();
-        highscores.highscores = scores;
-
         let highscore = crate::score::Highscore {
             name: string.clone(),
             score: score.0,
         };
 
         // send highscore to server
-        acquire_highscores.send(crate::score::AcquireHighscores);
         send_highscores.send(crate::score::SendHighscores(highscore));
+        acquire_highscores.send(crate::score::AcquireHighscores);
 
         string.clear();
 
@@ -370,18 +350,26 @@ pub fn enter_name(
         next_state.set(GameState::ViewingLeaderboard);
         leaderboard_event.send(ViewLeaderboardEvent);
     }
-    if keyboard_input.just_pressed(KeyCode::Backspace) {
-        string.pop();
-    }
 
     for ev in ev_char.read() {
+        if keyboard_input.just_pressed(KeyCode::Backspace) {
+            string.pop();
+            continue;
+        }
         if string.len() <= 10 && ev.char.is_ascii() {
+            if ev.char == "\n" || ev.char == "\r" {
+                continue;
+            }
             string.push(ev.char.chars().next().unwrap());
         }
     }
 
     for mut text in text.iter_mut() {
-        text.sections[1].value = (*string).to_string()
+        if string.is_empty() {
+            text.sections[1].value = " ".to_string();
+        } else {
+            text.sections[1].value = string.to_string();
+        }
     }
 }
 

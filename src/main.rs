@@ -94,8 +94,11 @@ fn main() {
                 .set(LogPlugin {
                     #[cfg(debug_assertions)]
                     level: Level::DEBUG,
+                    #[cfg(debug_assertions)]
+                    filter: "info,wgpu_core=warn,wgpu_hal=warn,rust_snake=debug".into(),
                     #[cfg(not(debug_assertions))]
                     level: Level::ERROR,
+                    #[cfg(not(debug_assertions))]
                     filter: "".to_string(),
                     update_subscriber: None,
                 }),
@@ -103,6 +106,6 @@ fn main() {
         .run();
 }
 
-// fn log(mut state: Res<State<GameState>>) {
-//     tracing::info!("State: {:?}", state.get());
-// }
+fn log(state: Res<State<GameState>>) {
+    debug!("State: {:?}", state.get());
+}

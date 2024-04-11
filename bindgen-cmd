@@ -1,0 +1,1 @@
+wasm-bindgen --out-dir ./out/ --target web ./target/wasm32-unknown-unknown/release-wasm/rust-snake.wasm

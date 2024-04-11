@@ -146,8 +146,8 @@ pub fn setup(
 
     // Preload assets before the game begins
     let _ = asset_server.load::<Font>("fonts/roboto-thin.ttf");
-    let _ = asset_server.load::<AudioSource>("eat_01.mp3");
-    let _ = asset_server.load::<AudioSource>("speed_up.mp3");
+    // let _ = asset_server.load::<AudioSource>("eat_01.ogg");
+    // let _ = asset_server.load::<AudioSource>("speed_up.ogg");
 
     commands
         .spawn(

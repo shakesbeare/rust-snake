@@ -1,0 +1,3 @@
+[alias]
+wasm-build = "build --profile=release-wasm --target=wasm32-unknown-unknown"
+xtask = "run --package xtask --"

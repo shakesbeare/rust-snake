@@ -8,9 +8,11 @@ use rust_snake::snake::*;
 use rust_snake::*;
 
 fn main() {
-    #[cfg(target_arch="wasm32-unknown-unknown")]
-    wasm_logger::init(wasm_logger::Config::default());
-    std::panic::set_hook(Box::new(console_error_panic_hook::hook));
+    #[cfg(target_arch = "wasm32-unknown-unknown")]
+    {
+        wasm_logger::init(wasm_logger::Config::default());
+        std::panic::set_hook(Box::new(console_error_panic_hook::hook));
+    }
     App::new()
         .insert_resource(SnakeSegments::default())
         .insert_resource(LastTailPosition::default())
@@ -97,7 +99,9 @@ fn main() {
                     #[cfg(debug_assertions)]
                     level: Level::DEBUG,
                     #[cfg(debug_assertions)]
-                    filter: "info,wgpu_core=warn,wgpu_hal=warn,rust_snake=debug".into(),
+                    filter:
+                        "info,wgpu_core=warn,wgpu_hal=warn,rust_snake=debug"
+                            .into(),
                     #[cfg(not(debug_assertions))]
                     level: Level::ERROR,
                     #[cfg(not(debug_assertions))]

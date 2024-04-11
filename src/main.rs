@@ -20,7 +20,7 @@ fn main() {
             1. / TICK_RATE,
             TimerMode::Repeating,
         )))
-        .insert_resource(ClearColor(Color::hex("1d2021").unwrap()))
+        .insert_resource(ClearColor(Color::hex("0b0c0d").unwrap()))
         .insert_resource(NextDirection::default())
         .insert_resource(Score::default())
         .insert_resource(LeaderboardEarned::NotPlaced)

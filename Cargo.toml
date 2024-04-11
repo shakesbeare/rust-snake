@@ -15,9 +15,17 @@ rand = { version = "0.8.5" }
 reqwest = { version = "0.11.24", features = ["json", "blocking", "default-tls"], default-features = false }
 serde = { version = "1.0.196", features = ["serde_derive"], default-features = false }
 serde_json = { version = "1.0.113", default-features = false }
+sysinfo = { version = "0.30.10", optional = true }
 tokio = { version = "1.36.0", features = ["rt"], default-features = false }
 wasm-bindgen-futures = { version = "0.4.41", default-features = false }
 wasm-logger = { version = "0.2.0", default-features = false }
+
+
+
+[features]
+default = [
+    "dep:sysinfo"
+]
 
 [profile.dev]
 opt-level = 1

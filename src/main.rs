@@ -7,14 +7,17 @@ use rust_snake::score::*;
 use rust_snake::snake::*;
 use rust_snake::*;
 
+#[cfg(debug_assertions)]
+use rust_snake::debug::*;
+
 fn main() {
     #[cfg(target_arch = "wasm32-unknown-unknown")]
     {
         wasm_logger::init(wasm_logger::Config::default());
         std::panic::set_hook(Box::new(console_error_panic_hook::hook));
     }
-    App::new()
-        .insert_resource(SnakeSegments::default())
+    let mut app = App::new();
+    app.insert_resource(SnakeSegments::default())
         .insert_resource(LastTailPosition::default())
         .insert_resource(TickTimer(Timer::from_seconds(
             1. / TICK_RATE,
@@ -82,7 +85,6 @@ fn main() {
             Update,
             (awaiting_reset).run_if(in_state(GameState::ReadyToReset)),
         )
-        // .add_systems(Update, log)
         .add_plugins(
             DefaultPlugins
                 .set(WindowPlugin {
@@ -109,11 +111,20 @@ fn main() {
                     filter: "".to_string(),
                     update_subscriber: None,
                 }),
-        )
-        .run();
+        );
+
+    #[cfg(debug_assertions)]
+    app.add_systems(Update, (set_stats, setup_stats_display, update_stats_display));
+    #[cfg(debug_assertions)]
+    app
+        .insert_resource::<DebugStats>(DebugStats::default())
+        .insert_resource::<FrameRate>(FrameRate::new())
+        .insert_resource::<LastFrameTime>(LastFrameTime { time: std::time::Instant::now() });
+
+    app.run();
 }
 
-#[cfg(not(target_arch ="wasm32-unknown-unknown"))]
+#[cfg(not(target_arch = "wasm32-unknown-unknown"))]
 fn log(state: Res<State<GameState>>) {
     debug!("State: {:?}", state.get());
 }

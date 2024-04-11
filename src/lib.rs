@@ -3,6 +3,7 @@
 pub mod food;
 pub mod score;
 pub mod snake;
+pub mod debug;
 
 use bevy::prelude::*;
 use futures::Future;

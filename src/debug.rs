@@ -59,8 +59,6 @@ pub fn set_stats(
     frame_time_counter.time = Instant::now();
     frame_rate.push(1000.0 / debug_stats.frame_time);
 
-    let sys = sysinfo::System::new_all();
-
     debug_stats.memory_usage = crate::PEAK_ALLOC.current_usage_as_mb();
 }
 

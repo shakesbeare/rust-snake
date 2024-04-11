@@ -12,8 +12,7 @@ pub struct LastFrameTime {
 #[derive(Resource, Default)]
 pub struct DebugStats {
     frame_time: f32,
-    memory_usage: u64,
-    swap_usage: u64,
+    memory_usage: f32,
 }
 
 #[derive(Resource, Default)]
@@ -49,7 +48,7 @@ pub struct FrameRate {
 }
 
 #[derive(Component)]
-pub struct FpsText;
+pub struct DebugText;
 
 pub fn set_stats(
     mut frame_time_counter: ResMut<LastFrameTime>,
@@ -62,8 +61,7 @@ pub fn set_stats(
 
     let sys = sysinfo::System::new_all();
 
-    debug_stats.memory_usage = sys.used_memory() / 1024 / 1024; // in MB
-    debug_stats.swap_usage = sys.used_swap() / 1024 / 1024; // in MB
+    debug_stats.memory_usage = crate::PEAK_ALLOC.current_usage_as_mb();
 }
 
 pub fn setup_stats_display(
@@ -88,26 +86,43 @@ pub fn setup_stats_display(
                     color: Color::GREEN,
                 },
             ),
+            TextSection::new(
+                "Memory Usage: ",
+                TextStyle {
+                    font: asset_server.load("fonts/roboto-thin.ttf"),
+                    font_size: 20.,
+                    color: Color::GREEN,
+                },
+            ),
+            TextSection::new(
+                "",
+                TextStyle {
+                    font: asset_server.load("fonts/roboto-thin.ttf"),
+                    font_size: 20.,
+                    color: Color::GREEN,
+                },
+            ),
         ])
         .with_text_justify(JustifyText::Right)
         .with_style(Style {
             align_self: AlignSelf::FlexStart,
             position_type: PositionType::Absolute,
-            left: Val::Px(500.),
+            left: Val::Px(400.),
             ..default()
         }),
-        FpsText,
+        DebugText,
     ));
 }
 
 pub fn update_stats_display(
-    mut fps_text: Query<&mut Text, With<FpsText>>,
+    mut fps_text: Query<&mut Text, With<DebugText>>,
     frame_rate: Res<FrameRate>,
     debug_stats: Res<DebugStats>,
 ) {
     let fps = frame_rate.calc();
 
     for mut text in fps_text.iter_mut() {
-        text.sections[1].value = format!("{:.2}", fps)
+        text.sections[1].value = format!("{:.2}\n", fps);
+        text.sections[3].value = format!("{}\n", debug_stats.memory_usage);
     }
 }

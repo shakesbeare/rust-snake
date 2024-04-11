@@ -17,6 +17,10 @@ pub const BIG_TICK_INCREASE: f32 = 0.50; // How much to increase tick rate by on
 pub const BLOCK_SIZE: f32 = 0.8;
 pub const WALL: f32 = 20.;
 
+#[cfg(debug_assertions)]
+#[global_allocator]
+pub static PEAK_ALLOC: peak_alloc::PeakAlloc = peak_alloc::PeakAlloc;
+
 #[derive(Default, States, Clone, Eq, PartialEq, Debug, Hash, Reflect)]
 pub enum GameState {
     #[default]

@@ -114,7 +114,9 @@ fn main() {
         );
 
     #[cfg(debug_assertions)]
-    app.add_systems(Update, (set_stats, setup_stats_display, update_stats_display));
+    app.add_systems(Update, (set_stats, update_stats_display));
+    #[cfg(debug_assertions)]
+    app.add_systems(Startup, setup_stats_display);
     #[cfg(debug_assertions)]
     app
         .insert_resource::<DebugStats>(DebugStats::default())

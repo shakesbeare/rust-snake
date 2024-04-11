@@ -10,7 +10,7 @@ pub fn generate_food_coords() -> crate::Position {
 
     // reduce probability that food spawns on the wall
     // 10% chance to regenerate if food is on the wall
-    if (x == 0 
+    if (x == 0
         || x == crate::WALL as i32 - 1
         || y == 0
         || y == crate::WALL as i32 - 1)

@@ -43,7 +43,10 @@ fn main() {
         .add_event::<SendHighscores>()
         .add_systems(Startup, (init_scores, setup, add_snake).chain())
         // .add_systems(Update, game_over.run_if(in_state(GameState::Playing)))
-        .add_systems(Update, size_scaling.run_if(in_state(WindowState::NeedsScaling)))
+        .add_systems(
+            Update,
+            size_scaling.run_if(in_state(WindowState::NeedsScaling)),
+        )
         .add_systems(
             Update,
             (

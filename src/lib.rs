@@ -26,6 +26,13 @@ pub enum GameState {
     ReadyToReset,
 }
 
+#[derive(Default, States, Clone, Eq, PartialEq, Debug, Hash, Reflect)]
+pub enum WindowState {
+    #[default]
+    NeedsScaling,
+    Scaled,
+}
+
 #[derive(Component, Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Position {
     x: i32,
@@ -102,6 +109,7 @@ where
 pub fn size_scaling(
     mut windows: Query<&mut Window>,
     mut query: Query<(&Size, &mut Transform)>,
+    mut next_state: ResMut<NextState<WindowState>>,
 ) {
     let window = windows.single_mut();
     for (sprite_size, mut transform) in query.iter_mut() {
@@ -113,6 +121,8 @@ pub fn size_scaling(
             1.,
         )
     }
+
+    next_state.set(WindowState::Scaled);
 }
 
 fn convert(pos: f32, bound_window: f32, bound_game: f32) -> f32 {

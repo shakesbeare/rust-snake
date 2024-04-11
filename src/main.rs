@@ -33,6 +33,7 @@ fn main() {
         .insert_resource(TickAccum(TICK_RATE))
         .init_state::<GameState>()
         .init_state::<ScoresDownloaded>()
+        .init_state::<WindowState>()
         .add_event::<EatEvent>()
         .add_event::<GameOverEvent>()
         .add_event::<EnterNameEvent>()
@@ -42,7 +43,7 @@ fn main() {
         .add_event::<SendHighscores>()
         .add_systems(Startup, (init_scores, setup, add_snake).chain())
         // .add_systems(Update, game_over.run_if(in_state(GameState::Playing)))
-        .add_systems(Update, game_over.run_if(in_state(GameState::GameOver)))
+        .add_systems(Update, size_scaling.run_if(in_state(WindowState::NeedsScaling)))
         .add_systems(
             Update,
             (
@@ -64,7 +65,6 @@ fn main() {
                 score_update,
                 game_over,
                 position_translation,
-                size_scaling,
             )
                 .chain()
                 .run_if(in_state(GameState::Playing)),
@@ -91,6 +91,7 @@ fn main() {
                         resolution: bevy::window::WindowResolution::new(
                             600., 600.,
                         ),
+                        resizable: false,
                         ..default()
                     }),
                     ..default()

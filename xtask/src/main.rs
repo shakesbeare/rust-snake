@@ -19,6 +19,11 @@ fn main() {
     let app_result = match app.cmd {
         Subcommand::WasmOpt => wasm_opt(),
     };
+
+    if let Err(e) = app_result {
+        eprintln!("{e:?}");
+        std::process::exit(1);
+    }
 }
 
 fn wasm_opt() -> anyhow::Result<()> {

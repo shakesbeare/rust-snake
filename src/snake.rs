@@ -91,7 +91,6 @@ pub fn snake_eating(
     mut score: ResMut<crate::score::Score>,
     mut tick_timer: ResMut<crate::TickTimer>,
     mut tick_accum: ResMut<TickAccum>,
-    asset_server: ResMut<AssetServer>,
 ) {
     for head_pos in head_positions.iter() {
         for (ent, food_pos) in food_positions.iter() {

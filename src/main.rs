@@ -113,6 +113,7 @@ fn main() {
         .run();
 }
 
+#[cfg(not(target_arch ="wasm32-unknown-unknown"))]
 fn log(state: Res<State<GameState>>) {
     debug!("State: {:?}", state.get());
 }

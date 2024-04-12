@@ -1,9 +1,9 @@
 #![allow(clippy::too_many_arguments)]
 
+pub mod debug;
 pub mod food;
 pub mod score;
 pub mod snake;
-pub mod debug;
 
 use bevy::prelude::*;
 use futures::Future;

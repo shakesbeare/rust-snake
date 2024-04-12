@@ -35,7 +35,7 @@ fn main() {
             TimerMode::Once,
         )))
         .insert_resource(TickAccum(TICK_RATE))
-        .insert_resource(NoScoreUntil(0))
+        .insert_resource(ScoreBlocker(0))
         .init_state::<GameState>()
         .init_state::<ScoresDownloaded>()
         .init_state::<WindowState>()

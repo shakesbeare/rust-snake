@@ -7,7 +7,7 @@ pub mod score;
 pub mod snake;
 
 use bevy::prelude::*;
-use cheats::NoScoreUntil;
+use cheats::ScoreBlocker;
 use futures::Future;
 use score::LeaderboardEarned;
 use score::HIGHSCORES;
@@ -535,7 +535,7 @@ pub fn awaiting_reset(
     mut score: ResMut<crate::score::Score>,
     mut next_direction: ResMut<crate::snake::NextDirection>,
     mut tick_accum: ResMut<TickAccum>,
-    mut score_blocker: ResMut<NoScoreUntil>,
+    mut score_blocker: ResMut<ScoreBlocker>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
     text: Query<Entity, With<crate::score::ScoreText>>,
     asset_server: Res<AssetServer>,

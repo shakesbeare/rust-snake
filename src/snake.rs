@@ -1,4 +1,4 @@
-use crate::{cheats::NoScoreUntil, Position};
+use crate::{cheats::ScoreBlocker, Position};
 use bevy::prelude::*;
 
 use std::collections::VecDeque;
@@ -91,7 +91,7 @@ pub fn snake_eating(
     mut score: ResMut<crate::score::Score>,
     mut tick_timer: ResMut<crate::TickTimer>,
     mut tick_accum: ResMut<TickAccum>,
-    score_blocker: Res<NoScoreUntil>,
+    score_blocker: Res<ScoreBlocker>,
 ) {
     for head_pos in head_positions.iter() {
         for (ent, food_pos) in food_positions.iter() {

@@ -163,6 +163,43 @@ pub fn setup(
     let _ = asset_server.load::<Font>("fonts/roboto-thin.ttf");
     // let _ = asset_server.load::<AudioSource>("eat_01.ogg");
     // let _ = asset_server.load::<AudioSource>("speed_up.ogg");
+    let border_color = Color::BEIGE;
+    commands.spawn(SpriteBundle {
+        sprite: Sprite {
+            color: border_color,
+            custom_size: Some(Vec2::new(1.0, 602.0)),
+            ..default()
+        },
+        transform: Transform::from_translation(Vec3::new(-301.0, 0.0, 0.0)),
+        ..default()
+    });
+    commands.spawn(SpriteBundle {
+        sprite: Sprite {
+            color: border_color,
+            custom_size: Some(Vec2::new(1.0, 602.0)),
+            ..default()
+        },
+        transform: Transform::from_translation(Vec3::new(301.0, 0.0, 0.0)),
+        ..default()
+    });
+    commands.spawn(SpriteBundle {
+        sprite: Sprite {
+            color: border_color,
+            custom_size: Some(Vec2::new(602.0, 1.0)),
+            ..default()
+        },
+        transform: Transform::from_translation(Vec3::new(0.0, 301.0, 0.0)),
+        ..default()
+    });
+    commands.spawn(SpriteBundle {
+        sprite: Sprite {
+            color: border_color,
+            custom_size: Some(Vec2::new(602.0, 1.0)),
+            ..default()
+        },
+        transform: Transform::from_translation(Vec3::new(0.0, -301.0, 0.0)),
+        ..default()
+    });
 
     commands
         .spawn(
@@ -188,6 +225,8 @@ pub fn setup(
             .with_style(Style {
                 align_self: AlignSelf::FlexStart,
                 position_type: PositionType::Absolute,
+                left: Val::Px(12.),
+                top: Val::Px(10.),
                 ..default()
             }),
         )

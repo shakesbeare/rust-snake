@@ -23,7 +23,7 @@ fn main() {
             1. / TICK_RATE,
             TimerMode::Repeating,
         )))
-        .insert_resource(ClearColor(Color::hex("0b0c0d").unwrap()))
+        .insert_resource(ClearColor(Color::hex("1d2021").unwrap()))
         .insert_resource(NextDirection::default())
         .insert_resource(Score::default())
         .insert_resource(LeaderboardEarned::NotPlaced)
@@ -91,7 +91,7 @@ fn main() {
                     primary_window: Some(Window {
                         canvas: Some("#game".into()),
                         resolution: bevy::window::WindowResolution::new(
-                            600., 600.,
+                            602., 602.,
                         ),
                         resizable: false,
                         ..default()

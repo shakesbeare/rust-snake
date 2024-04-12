@@ -2,11 +2,11 @@ use bevy::log::Level;
 use bevy::log::LogPlugin;
 use bevy::prelude::*;
 
+use rust_snake::cheats::*;
 use rust_snake::food::*;
 use rust_snake::score::*;
 use rust_snake::snake::*;
 use rust_snake::*;
-use rust_snake::cheats::*;
 
 #[cfg(debug_assertions)]
 use rust_snake::debug::*;
@@ -18,6 +18,8 @@ fn main() {
         std::panic::set_hook(Box::new(console_error_panic_hook::hook));
     }
     let mut app = App::new();
+
+    // Insert resources
     app.insert_resource(SnakeSegments::default())
         .insert_resource(LastTailPosition::default())
         .insert_resource(TickTimer(Timer::from_seconds(
@@ -35,8 +37,10 @@ fn main() {
             TimerMode::Once,
         )))
         .insert_resource(TickAccum(TICK_RATE))
-        .insert_resource(ScoreBlocker(0))
-        .init_state::<GameState>()
+        .insert_resource(ScoreBlocker(0));
+
+    // States and Resources
+    app.init_state::<GameState>()
         .init_state::<ScoresDownloaded>()
         .init_state::<WindowState>()
         .add_event::<EatEvent>()
@@ -45,8 +49,10 @@ fn main() {
         .add_event::<ViewLeaderboardEvent>()
         .add_event::<AcquireHighscores>()
         .add_event::<TriggerDownload>()
-        .add_event::<SendHighscores>()
-        .add_systems(Startup, (init_scores, setup, add_snake).chain())
+        .add_event::<SendHighscores>();
+
+    // Systems
+    app.add_systems(Startup, (init_scores, setup, add_snake).chain())
         .add_systems(Update, game_over.run_if(in_state(GameState::GameOver)))
         .add_systems(Update, size_scaling)
         .add_systems(
@@ -87,44 +93,45 @@ fn main() {
         .add_systems(
             Update,
             (awaiting_reset).run_if(in_state(GameState::ReadyToReset)),
-        )
-        .add_plugins(
-            DefaultPlugins
-                .set(WindowPlugin {
-                    primary_window: Some(Window {
-                        canvas: Some("#game".into()),
-                        resolution: bevy::window::WindowResolution::new(
-                            602., 602.,
-                        ),
-                        resizable: false,
-                        ..default()
-                    }),
-                    ..default()
-                })
-                .set(LogPlugin {
-                    #[cfg(debug_assertions)]
-                    level: Level::DEBUG,
-                    #[cfg(debug_assertions)]
-                    filter:
-                        "info,wgpu_core=warn,wgpu_hal=warn,rust_snake=debug"
-                            .into(),
-                    #[cfg(not(debug_assertions))]
-                    level: Level::ERROR,
-                    #[cfg(not(debug_assertions))]
-                    filter: "".to_string(),
-                    update_subscriber: None,
-                }),
         );
 
+    // plugins
+    app.add_plugins(
+        DefaultPlugins
+            .set(WindowPlugin {
+                primary_window: Some(Window {
+                    canvas: Some("#game".into()),
+                    resolution: bevy::window::WindowResolution::new(602., 602.),
+                    resizable: false,
+                    ..default()
+                }),
+                ..default()
+            })
+            .set(LogPlugin {
+                #[cfg(debug_assertions)]
+                level: Level::DEBUG,
+                #[cfg(debug_assertions)]
+                filter: "info,wgpu_core=warn,wgpu_hal=warn,rust_snake=debug"
+                    .into(),
+                #[cfg(not(debug_assertions))]
+                level: Level::ERROR,
+                #[cfg(not(debug_assertions))]
+                filter: "".to_string(),
+                update_subscriber: None,
+            }),
+    );
+
+    // Debug only!!
     #[cfg(debug_assertions)]
-    app.add_systems(Update, (set_stats, update_stats_display));
-    #[cfg(debug_assertions)]
-    app.add_systems(Startup, setup_stats_display);
-    #[cfg(debug_assertions)]
-    app
-        .insert_resource::<DebugStats>(DebugStats::default())
-        .insert_resource::<FrameRate>(FrameRate::new())
-        .insert_resource::<LastFrameTime>(LastFrameTime { time: std::time::Instant::now() });
+    {
+        app.add_systems(Update, (set_stats, update_stats_display));
+        app.add_systems(Startup, setup_stats_display);
+        app.insert_resource::<DebugStats>(DebugStats::default())
+            .insert_resource::<FrameRate>(FrameRate::new())
+            .insert_resource::<LastFrameTime>(LastFrameTime {
+                time: std::time::Instant::now(),
+            });
+    }
 
     app.run();
 }

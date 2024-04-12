@@ -1,12 +1,13 @@
 #![allow(clippy::too_many_arguments)]
 
+pub mod cheats;
 pub mod debug;
 pub mod food;
 pub mod score;
 pub mod snake;
-pub mod cheats;
 
 use bevy::prelude::*;
+use cheats::NoScoreUntil;
 use futures::Future;
 use score::LeaderboardEarned;
 use score::HIGHSCORES;
@@ -534,6 +535,7 @@ pub fn awaiting_reset(
     mut score: ResMut<crate::score::Score>,
     mut next_direction: ResMut<crate::snake::NextDirection>,
     mut tick_accum: ResMut<TickAccum>,
+    mut score_blocker: ResMut<NoScoreUntil>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
     text: Query<Entity, With<crate::score::ScoreText>>,
     asset_server: Res<AssetServer>,
@@ -578,5 +580,6 @@ pub fn awaiting_reset(
         tick_timer.0 =
             Timer::from_seconds(1. / TICK_RATE, TimerMode::Repeating);
         score.0 = 0;
+        score_blocker.0 = 0;
     }
 }

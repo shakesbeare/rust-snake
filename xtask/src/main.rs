@@ -68,8 +68,10 @@ fn wasm_opt() -> anyhow::Result<()> {
 
 fn wasm_deploy() -> anyhow::Result<()> {
     let status = Command::new("git").args(["status", "--porcelain"]).output()?;
-    dbg!(status.stdout);
-    return Ok(());
+    if !status.stdout.is_empty() {
+        eprintln!("xtask/wasm-deploy => Working tree is not empty!");
+        std::process::exit(1);
+    }
     let tag = format!("v{}", xtask::get_cargo_version()?);
     println!("xtask/wasm-deploy => Building and optimizing wasm");
     Command::new("cargo")
@@ -80,12 +82,14 @@ fn wasm_deploy() -> anyhow::Result<()> {
     println!("xtask/wasm-deploy => Creating tarball...");
     Command::new("tar")
         .args([
+            "-C",
+            "target/wasm32-unknown-unknown/release-wasm/opt",
             "-czvf", 
             format!("{}.tar.gz", &tag).as_str(),
-            "target/wasm32-unknown-unknown/release-wasm/opt/rust-snake.d.ts",
-            "target/wasm32-unknown-unknown/release-wasm/opt/rust-snake.js",
-            "target/wasm32-unknown-unknown/release-wasm/opt/rust-snake_bg.wasm.d.ts",
-            "target/wasm32-unknown-unknown/release-wasm/opt/rust-snake_bg.wasm",
+            "rust-snake.d.ts",
+            "rust-snake.js",
+            "rust-snake_bg.wasm.d.ts",
+            "rust-snake_bg.wasm",
         ])
         .spawn()?
         .wait()?;

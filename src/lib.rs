@@ -525,62 +525,78 @@ pub fn leaderboard(
     }
 }
 
+#[derive(Event)]
+pub struct ResetEvent;
+
 pub fn awaiting_reset(
+    keyboard_input: Res<ButtonInput<KeyCode>>,
+    mut reset_writer: EventWriter<ResetEvent>,
+) {
+    if keyboard_input.get_just_pressed().next().is_some() {
+        reset_writer.send(ResetEvent);
+    }
+}
+
+/// Reset game when reset event is sent
+pub fn reset_game(
     mut commands: Commands,
     mut next_state: ResMut<NextState<GameState>>,
     mut eat_writer: EventWriter<crate::snake::EatEvent>,
     segments_res: ResMut<crate::snake::SnakeSegments>,
-    last_tail_position: ResMut<crate::snake::LastTailPosition>,
-    mut tick_timer: ResMut<crate::TickTimer>,
-    mut score: ResMut<crate::score::Score>,
     mut next_direction: ResMut<crate::snake::NextDirection>,
     mut tick_accum: ResMut<TickAccum>,
-    mut score_blocker: ResMut<ScoreBlocker>,
-    keyboard_input: Res<ButtonInput<KeyCode>>,
+    mut tick_timer: ResMut<crate::TickTimer>,
     text: Query<Entity, With<crate::score::ScoreText>>,
+    mut score: ResMut<crate::score::Score>,
+    mut score_blocker: ResMut<ScoreBlocker>,
+    last_tail_position: ResMut<crate::snake::LastTailPosition>,
     asset_server: Res<AssetServer>,
+    mut reset_reader: EventReader<ResetEvent>,
+    food: Query<Entity, With<crate::food::Food>>,
+    segments: Query<Entity, With<crate::snake::Segment>>,
 ) {
-    if keyboard_input.get_just_pressed().next().is_some() {
-        for ent in text.iter() {
-            commands.entity(ent).despawn();
-        }
-        commands
-            .spawn(
-                TextBundle::from_sections([
-                    TextSection::new(
-                        "Score: ",
-                        TextStyle {
-                            font: asset_server.load("fonts/roboto-thin.ttf"),
-                            font_size: 50.,
-                            color: Color::BEIGE,
-                        },
-                    ),
-                    TextSection::new(
-                        "0",
-                        TextStyle {
-                            font: asset_server.load("fonts/roboto-thin.ttf"),
-                            font_size: 50.,
-                            color: Color::BEIGE,
-                        },
-                    ),
-                ])
-                .with_text_justify(JustifyText::Left)
-                .with_style(Style {
-                    align_self: AlignSelf::FlexStart,
-                    position_type: PositionType::Absolute,
-                    ..default()
-                }),
-            )
-            .insert(crate::score::ScoreText);
-
-        next_state.set(GameState::Playing);
-        crate::snake::add_snake(commands, segments_res, last_tail_position);
-        eat_writer.send(crate::snake::EatEvent);
-        next_direction.0 = Some(crate::snake::Direction::Left);
-        tick_accum.0 = TICK_RATE;
-        tick_timer.0 =
-            Timer::from_seconds(1. / TICK_RATE, TimerMode::Repeating);
-        score.0 = 0;
-        score_blocker.0 = 0;
+    if reset_reader.read().next().is_none() {
+        return;
     }
+
+    for ent in text.iter().chain(food.iter()).chain(segments.iter()) {
+        commands.entity(ent).despawn();
+    }
+    commands
+        .spawn(
+            TextBundle::from_sections([
+                TextSection::new(
+                    "Score: ",
+                    TextStyle {
+                        font: asset_server.load("fonts/roboto-thin.ttf"),
+                        font_size: 50.,
+                        color: Color::BEIGE,
+                    },
+                ),
+                TextSection::new(
+                    "0",
+                    TextStyle {
+                        font: asset_server.load("fonts/roboto-thin.ttf"),
+                        font_size: 50.,
+                        color: Color::BEIGE,
+                    },
+                ),
+            ])
+            .with_text_justify(JustifyText::Left)
+            .with_style(Style {
+                align_self: AlignSelf::FlexStart,
+                position_type: PositionType::Absolute,
+                ..default()
+            }),
+        )
+        .insert(crate::score::ScoreText);
+
+    next_state.set(GameState::Playing);
+    crate::snake::add_snake(commands, segments_res, last_tail_position);
+    eat_writer.send(crate::snake::EatEvent);
+    next_direction.0 = Some(crate::snake::Direction::Left);
+    tick_accum.0 = TICK_RATE;
+    tick_timer.0 = Timer::from_seconds(1. / TICK_RATE, TimerMode::Repeating);
+    score.0 = 0;
+    score_blocker.0 = 0;
 }

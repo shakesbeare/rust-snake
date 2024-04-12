@@ -49,7 +49,8 @@ fn main() {
         .add_event::<ViewLeaderboardEvent>()
         .add_event::<AcquireHighscores>()
         .add_event::<TriggerDownload>()
-        .add_event::<SendHighscores>();
+        .add_event::<SendHighscores>()
+        .add_event::<ResetEvent>();
 
     // Systems ----------------
     // Startup
@@ -67,6 +68,7 @@ fn main() {
             snake_growth,
             score_update,
             quick_speed,
+            quick_reset,
             game_over,
             position_translation,
         )
@@ -74,7 +76,8 @@ fn main() {
             .run_if(in_state(GameState::Playing)),
     )
     .add_systems(Update, game_over.run_if(in_state(GameState::GameOver)))
-    .add_systems(Update, enter_name.run_if(in_state(GameState::EnterName)));
+    .add_systems(Update, enter_name.run_if(in_state(GameState::EnterName)))
+    .add_systems(Update, reset_game);
 
     // -- Graphics and Interface
     app.add_systems(Update, size_scaling)

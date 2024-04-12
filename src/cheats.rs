@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use crate::{snake::TickAccum, BIG_TICK_INCREASE, TICK_INCREASE, TICK_RATE};
+use crate::{snake::TickAccum, ResetEvent, BIG_TICK_INCREASE, TICK_INCREASE, TICK_RATE};
 
 #[derive(Resource)]
 pub struct ScoreBlocker(pub u32);
@@ -18,5 +18,14 @@ pub fn quick_speed(
         tick_timer.0 =
             Timer::from_seconds(1. / tick_accum.0, TimerMode::Repeating);
         score_blocker.0 = 30;
+    }
+}
+
+pub fn quick_reset(
+    keyboard_input: Res<ButtonInput<KeyCode>>,
+    mut reset_writer: EventWriter<ResetEvent>,
+) {
+    if keyboard_input.pressed(KeyCode::Backslash) {
+        reset_writer.send(ResetEvent);
     }
 }

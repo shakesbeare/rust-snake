@@ -51,49 +51,57 @@ fn main() {
         .add_event::<TriggerDownload>()
         .add_event::<SendHighscores>();
 
-    // Systems
-    app.add_systems(Startup, (init_scores, setup, add_snake).chain())
-        .add_systems(Update, game_over.run_if(in_state(GameState::GameOver)))
-        .add_systems(Update, size_scaling)
-        .add_systems(
-            Update,
-            (
-                download_manager,
-                download_scores
-                    .run_if(in_state(ScoresDownloaded::NotDownloaded))
-                    .chain(),
-            ),
+    // Systems ----------------
+    // Startup
+    app.add_systems(Startup, (init_scores, setup, add_snake).chain());
+
+    // Update
+    // -- Core
+    app.add_systems(
+        Update,
+        (
+            food_spawner,
+            control_snake,
+            update_snake,
+            snake_eating,
+            snake_growth,
+            score_update,
+            quick_speed,
+            game_over,
+            position_translation,
         )
-        .add_systems(Update, upload_scores)
+            .chain()
+            .run_if(in_state(GameState::Playing)),
+    )
+    .add_systems(Update, game_over.run_if(in_state(GameState::GameOver)))
+    .add_systems(Update, enter_name.run_if(in_state(GameState::EnterName)));
+
+    // -- Graphics and Interface
+    app.add_systems(Update, size_scaling)
         .add_systems(
             Update,
-            (
-                food_spawner,
-                control_snake,
-                update_snake,
-                snake_eating,
-                snake_growth,
-                score_update,
-                quick_speed,
-                game_over,
-                position_translation,
-            )
-                .chain()
-                .run_if(in_state(GameState::Playing)),
-        )
-        .add_systems(
-            Update,
-            (enter_name_screen, enter_name)
-                .run_if(in_state(GameState::EnterName)),
+            enter_name_screen.run_if(in_state(GameState::EnterName)),
         )
         .add_systems(
             Update,
-            (leaderboard).run_if(in_state(GameState::ViewingLeaderboard)),
+            leaderboard.run_if(in_state(GameState::ViewingLeaderboard)),
         )
         .add_systems(
             Update,
-            (awaiting_reset).run_if(in_state(GameState::ReadyToReset)),
+            awaiting_reset.run_if(in_state(GameState::ReadyToReset)),
         );
+
+    // Network
+    app.add_systems(
+        Update,
+        (
+            download_manager,
+            download_scores
+                .run_if(in_state(ScoresDownloaded::NotDownloaded))
+                .chain(),
+        ),
+    )
+    .add_systems(Update, upload_scores);
 
     // plugins
     app.add_plugins(

@@ -572,6 +572,7 @@ pub fn awaiting_reset(
                 }),
             )
             .insert(crate::score::ScoreText);
+
         next_state.set(GameState::Playing);
         crate::snake::add_snake(commands, segments_res, last_tail_position);
         eat_writer.send(crate::snake::EatEvent);

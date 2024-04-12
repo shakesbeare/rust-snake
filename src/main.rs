@@ -6,6 +6,7 @@ use rust_snake::food::*;
 use rust_snake::score::*;
 use rust_snake::snake::*;
 use rust_snake::*;
+use rust_snake::cheats::*;
 
 #[cfg(debug_assertions)]
 use rust_snake::debug::*;
@@ -34,6 +35,7 @@ fn main() {
             TimerMode::Once,
         )))
         .insert_resource(TickAccum(TICK_RATE))
+        .insert_resource(NoScoreUntil(0))
         .init_state::<GameState>()
         .init_state::<ScoresDownloaded>()
         .init_state::<WindowState>()
@@ -66,6 +68,7 @@ fn main() {
                 snake_eating,
                 snake_growth,
                 score_update,
+                quick_speed,
                 game_over,
                 position_translation,
             )

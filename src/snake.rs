@@ -1,4 +1,4 @@
-use crate::Position;
+use crate::{cheats::NoScoreUntil, Position};
 use bevy::prelude::*;
 
 use std::collections::VecDeque;
@@ -91,6 +91,7 @@ pub fn snake_eating(
     mut score: ResMut<crate::score::Score>,
     mut tick_timer: ResMut<crate::TickTimer>,
     mut tick_accum: ResMut<TickAccum>,
+    score_blocker: Res<NoScoreUntil>,
 ) {
     for head_pos in head_positions.iter() {
         for (ent, food_pos) in food_positions.iter() {
@@ -100,6 +101,9 @@ pub fn snake_eating(
                 commands.entity(ent).despawn();
                 eat_writer.send(EatEvent);
                 score.0 += 1;
+                if score.0 <= score_blocker.0 {
+                    return
+                }
 
                 if score.0 % 10 == 0 {
                     // commands.spawn(AudioBundle {

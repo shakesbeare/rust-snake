@@ -4,6 +4,7 @@ pub mod debug;
 pub mod food;
 pub mod score;
 pub mod snake;
+pub mod cheats;
 
 use bevy::prelude::*;
 use futures::Future;

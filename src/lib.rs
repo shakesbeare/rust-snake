@@ -159,16 +159,12 @@ pub fn setup(
     mut commands: Commands,
     mut eat_writer: EventWriter<crate::snake::EatEvent>,
     mut acquire_highscores: EventWriter<crate::score::AcquireHighscores>,
-    asset_server: Res<AssetServer>,
 ) {
     commands.spawn(Camera2dBundle::default());
     eat_writer.send(crate::snake::EatEvent);
     acquire_highscores.send(crate::score::AcquireHighscores);
 
     // Preload assets before the game begins
-    let _ = asset_server.load::<Font>("fonts/roboto-thin.ttf");
-    // let _ = asset_server.load::<AudioSource>("eat_01.ogg");
-    // let _ = asset_server.load::<AudioSource>("speed_up.ogg");
     let border_color = Color::BEIGE;
     commands.spawn(SpriteBundle {
         sprite: Sprite {
@@ -315,41 +311,10 @@ pub fn enter_name(
 }
 
 pub fn leaderboard(
-    state: Res<State<GameState>>,
     mut next_state: ResMut<NextState<GameState>>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
-    asset_server: Res<AssetServer>,
-    mut leaderboard_event: EventReader<ViewLeaderboardEvent>,
 ) {
-    if leaderboard_event.read().next().is_some() {
-        let mut texts = vec![];
-        let hs_arc = HIGHSCORES.get().unwrap();
-        let highscores = hs_arc.lock().unwrap();
-        for score in highscores.highscores.iter() {
-            texts.push(TextSection::new(
-                format!("{}: {}\n", score.name, score.score),
-                TextStyle {
-                    font: asset_server.load("fonts/roboto-thin.ttf"),
-                    font_size: 40.,
-                    color: Color::BEIGE,
-                },
-            ));
-        }
-
-        // if not viewing leaderboard and state is game over,
-        // pressing any key advances the state to view the leaderboard
-
-        if state.get() == &GameState::GameOver
-            && keyboard_input.get_pressed().next().is_some()
-        {
-            next_state.set(GameState::ViewingLeaderboard);
-        }
-
-        if state.get() == &GameState::ViewingLeaderboard {
-
-            // leaderboard screen
-        }
-    } else if keyboard_input.get_pressed().next().is_some() {
+    if keyboard_input.get_pressed().next().is_some() {
         next_state.set(GameState::ReadyToReset);
     }
 }

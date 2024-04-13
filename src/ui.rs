@@ -1,5 +1,4 @@
 use crate::score::{LeaderboardEarned, Score, HIGHSCORES};
-use crate::GameState;
 use bevy::prelude::*;
 use bevy_egui::egui::RichText;
 use bevy_egui::egui::{self, FontId};

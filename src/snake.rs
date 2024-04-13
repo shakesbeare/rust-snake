@@ -96,8 +96,6 @@ pub fn snake_eating(
     for head_pos in head_positions.iter() {
         for (ent, food_pos) in food_positions.iter() {
             if food_pos == head_pos {
-                // let eat_sound = asset_server.load("eat_01.mp3");
-                // let speed_up_sound = asset_server.load("speed_up.mp3");
                 commands.entity(ent).despawn();
                 eat_writer.send(EatEvent);
                 score.0 += 1;
@@ -106,20 +104,8 @@ pub fn snake_eating(
                 }
 
                 if score.0 % 10 == 0 {
-                    // commands.spawn(AudioBundle {
-                    //     source: speed_up_sound,
-                    //     ..Default::default()
-                    // });
-                    // commands.spawn(AudioBundle {
-                    //     source: eat_sound,
-                    //     ..Default::default()
-                    // });
                     tick_accum.0 += crate::BIG_TICK_INCREASE;
                 } else {
-                    // commands.spawn(AudioBundle {
-                    //     source: eat_sound,
-                    //     ..Default::default()
-                    // });
                     tick_accum.0 += crate::TICK_INCREASE;
                 }
 

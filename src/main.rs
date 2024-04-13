@@ -40,7 +40,8 @@ fn main() {
         )))
         .insert_resource(TickAccum(TICK_RATE))
         .insert_resource(ScoreBlocker(0))
-        .insert_resource(rust_snake::Name("".to_string()));
+        .insert_resource(rust_snake::Name("".to_string()))
+        .insert_resource(MenuState::default());
 
     // States and Resources
     app.init_state::<GameState>()
@@ -57,7 +58,7 @@ fn main() {
 
     // Systems ----------------
     // Startup
-    app.add_systems(Startup, (init_scores, setup, add_snake, setup_ui).chain());
+    app.add_systems(Startup, (init_scores, setup, setup_ui).chain());
 
     // Update
     // -- Core
@@ -82,7 +83,8 @@ fn main() {
     .add_systems(Update, reset_game);
 
     // -- UI
-    app.add_systems(Update, playing_ui.run_if(in_state(GameState::Playing)))
+    app.add_systems(Update, menu_ui.run_if(in_state(GameState::MainMenu)))
+        .add_systems(Update, playing_ui.run_if(in_state(GameState::Playing)))
         .add_systems(Update, game_over_ui.run_if(in_state(GameState::GameOver)))
         .add_systems(
             Update,

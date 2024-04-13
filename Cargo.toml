@@ -1,7 +1,7 @@
 workspace = { members = ["xtask"] }
 [package]
 name = "rust-snake"
-version = "1.1.0"
+version = "1.2.0"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
@@ -20,6 +20,7 @@ serde_json = { version = "1.0.113", default-features = false }
 tokio = { version = "1.36.0", features = ["rt"], default-features = false }
 wasm-bindgen-futures = { version = "0.4.41", default-features = false }
 wasm-logger = { version = "0.2.0", default-features = false }
+webbrowser = "0.8.15"
 
 
 [features]

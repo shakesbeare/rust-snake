@@ -27,6 +27,7 @@ pub static PEAK_ALLOC: peak_alloc::PeakAlloc = peak_alloc::PeakAlloc;
 #[derive(Default, States, Clone, Eq, PartialEq, Debug, Hash, Reflect)]
 pub enum GameState {
     #[default]
+    MainMenu,
     Playing,
     GameOver,
     ViewingLeaderboard,
@@ -157,11 +158,9 @@ pub fn position_translation(
 
 pub fn setup(
     mut commands: Commands,
-    mut eat_writer: EventWriter<crate::snake::EatEvent>,
     mut acquire_highscores: EventWriter<crate::score::AcquireHighscores>,
 ) {
     commands.spawn(Camera2dBundle::default());
-    eat_writer.send(crate::snake::EatEvent);
     acquire_highscores.send(crate::score::AcquireHighscores);
 
     // Preload assets before the game begins

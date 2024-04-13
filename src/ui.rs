@@ -1,17 +1,79 @@
 use crate::score::{LeaderboardEarned, Score, HIGHSCORES};
+use crate::{GameState, ResetEvent};
 use bevy::prelude::*;
-use bevy_egui::egui::RichText;
 use bevy_egui::egui::{self, FontId};
+use bevy_egui::egui::{RichText, WidgetText};
 use bevy_egui::EguiContexts;
 
 #[cfg(debug_assertions)]
 use crate::debug::{DebugStats, FrameRate};
+
+#[derive(Resource, Default)]
+pub struct MenuState {
+    leaderboard_confirmation_shown: bool,
+}
 
 pub fn setup_ui(mut contexts: EguiContexts) {
     contexts.ctx_mut().set_visuals(egui::Visuals {
         panel_fill: egui::Color32::TRANSPARENT,
         ..default()
     });
+}
+
+pub fn menu_ui(
+    mut next_state: ResMut<NextState<GameState>>,
+    mut reset_event: EventWriter<ResetEvent>,
+    mut menu_state: ResMut<MenuState>,
+    mut contexts: EguiContexts,
+) {
+    let mut ctx = contexts.ctx_mut();
+    egui::CentralPanel::default().show(ctx, |ui| {
+        ui.vertical_centered(|ui| {
+            ui.add_space(301.0 - 100.0);
+            ui.heading(
+                RichText::new("Rust Snake").font(FontId::proportional(40.0)),
+            );
+            let play_button = ui.button(
+                RichText::new("Play Classic").font(FontId::proportional(30.0)),
+            );
+            let leaderboard_button = ui.button(
+                RichText::new("View Leaderboard")
+                    .font(FontId::proportional(30.0)),
+            );
+            if play_button.clicked() {
+                next_state.set(GameState::Playing);
+                reset_event.send(ResetEvent);
+            }
+
+            if leaderboard_button.clicked() {
+                menu_state.leaderboard_confirmation_shown = true;
+            }
+        });
+    });
+
+    if menu_state.leaderboard_confirmation_shown {
+        egui::Window::new("Confirm?")
+            .auto_sized()
+            .max_size(egui::Vec2::new(200.0, 40.0))
+            .anchor(egui::Align2::LEFT_TOP, egui::Vec2::new(301.0 - 100.0, 301.0 - 20.0))
+            .collapsible(false)
+            .open(&mut menu_state.leaderboard_confirmation_shown)
+            .show(ctx, |ui| {
+                ui.label(
+                    "Leaderboard entries may not be suitable for all users.",
+                );
+                ui.vertical_centered(|ui| {
+                    if ui.button(
+                        RichText::new("Continue")
+                            .text_style(egui::TextStyle::Heading),
+                    ).clicked() {
+                        if let Err(e) = webbrowser::open("https://berintmoffett.com/snake-leaderboard") {
+                            error!("An error occurred while trying to open the webpage: {}", e);
+                        }
+                    }
+                });
+            });
+    }
 }
 
 pub fn playing_ui(score: Res<Score>, mut contexts: EguiContexts) {

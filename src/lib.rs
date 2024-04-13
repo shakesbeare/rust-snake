@@ -3,6 +3,7 @@
 pub mod cheats;
 pub mod debug;
 pub mod food;
+pub mod game_mode;
 pub mod score;
 pub mod snake;
 pub mod ui;
@@ -210,6 +211,7 @@ pub fn game_over(
     mut reader: EventReader<GameOverEvent>,
     food: Query<Entity, With<crate::food::Food>>,
     segments: Query<Entity, With<crate::snake::Segment>>,
+    walls: Query<Entity, With<crate::game_mode::Wall>>,
     mut next_state: ResMut<NextState<GameState>>,
     state: Res<State<GameState>>,
     mut enter_name_event: EventWriter<CalcHighscoresEvent>,
@@ -219,13 +221,9 @@ pub fn game_over(
     if reader.read().next().is_some() {
         next_state.set(GameState::GameOver);
 
-        for ent in food.iter().chain(segments.iter()) {
+        for ent in food.iter().chain(segments.iter()).chain(walls.iter()) {
             commands.entity(ent).despawn();
         }
-
-        // Game Over screen
-        // unshow score text
-        // show game over text
     }
 
     if state.get() == &GameState::GameOver
@@ -359,7 +357,7 @@ pub fn reset_game(
 
     next_state.set(GameState::Playing);
     crate::snake::add_snake(commands, segments_res, last_tail_position, dir);
-    eat_writer.send(crate::snake::EatEvent);
+    eat_writer.send(crate::snake::EatEvent(true));
     next_direction.0 = Some(dir);
     tick_accum.0 = TICK_RATE;
     tick_timer.0 = Timer::from_seconds(1. / TICK_RATE, TimerMode::Repeating);

@@ -5,6 +5,7 @@ use bevy::prelude::*;
 use bevy_egui::EguiPlugin;
 use rust_snake::cheats::*;
 use rust_snake::food::*;
+use rust_snake::game_mode::*;
 use rust_snake::score::*;
 use rust_snake::snake::*;
 use rust_snake::ui::*;
@@ -41,7 +42,9 @@ fn main() {
         .insert_resource(TickAccum(TICK_RATE))
         .insert_resource(ScoreBlocker(0))
         .insert_resource(rust_snake::Name("".to_string()))
-        .insert_resource(MenuState::default());
+        .insert_resource(MenuState::default())
+        .insert_resource(GameRules::default())
+        .insert_resource(WallQueue::default());
 
     // States and Resources
     app.init_state::<GameState>()
@@ -54,7 +57,8 @@ fn main() {
         .add_event::<AcquireHighscores>()
         .add_event::<TriggerDownload>()
         .add_event::<SendHighscores>()
-        .add_event::<ResetEvent>();
+        .add_event::<ResetEvent>()
+        .add_event::<GameRuleChange>();
 
     // Systems ----------------
     // Startup
@@ -80,7 +84,10 @@ fn main() {
     )
     .add_systems(Update, game_over.run_if(in_state(GameState::GameOver)))
     .add_systems(Update, enter_name.run_if(in_state(GameState::EnterName)))
-    .add_systems(Update, reset_game);
+    .add_systems(Update, reset_game)
+    .add_systems(Update, enqueue_walls)
+    .add_systems(Update, try_spawn_walls.run_if(in_state(GameState::Playing)))
+    .add_systems(Update, game_rule_changer);
 
     // -- UI
     app.add_systems(Update, menu_ui.run_if(in_state(GameState::MainMenu)))

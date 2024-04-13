@@ -1,8 +1,9 @@
+use crate::game_mode::{GameRuleChange, GameRules};
 use crate::score::{LeaderboardEarned, Score, HIGHSCORES};
 use crate::{GameState, ResetEvent};
 use bevy::prelude::*;
-use bevy_egui::egui::{self, FontId};
 use bevy_egui::egui::RichText;
+use bevy_egui::egui::{self, FontId};
 use bevy_egui::EguiContexts;
 
 #[cfg(debug_assertions)]
@@ -23,6 +24,7 @@ pub fn setup_ui(mut contexts: EguiContexts) {
 pub fn menu_ui(
     mut next_state: ResMut<NextState<GameState>>,
     mut reset_event: EventWriter<ResetEvent>,
+    mut game_rule_event: EventWriter<GameRuleChange>,
     mut menu_state: ResMut<MenuState>,
     mut contexts: EguiContexts,
 ) {
@@ -36,11 +38,23 @@ pub fn menu_ui(
             let play_button = ui.button(
                 RichText::new("Play Classic").font(FontId::proportional(30.0)),
             );
+            let walls_button = ui.button(
+                RichText::new("Play Walls").font(FontId::proportional(30.0)),
+            );
             let leaderboard_button = ui.button(
                 RichText::new("View Leaderboard")
                     .font(FontId::proportional(30.0)),
             );
             if play_button.clicked() {
+                next_state.set(GameState::Playing);
+                reset_event.send(ResetEvent);
+            }
+
+            if walls_button.clicked() {
+                game_rule_event.send(GameRuleChange(GameRules {
+                    do_collide_walls: true,
+                    do_spawn_walls: true,
+                }));
                 next_state.set(GameState::Playing);
                 reset_event.send(ResetEvent);
             }

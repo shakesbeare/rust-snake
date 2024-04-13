@@ -1,4 +1,4 @@
-use crate::{cheats::ScoreBlocker, Position};
+use crate::{cheats::ScoreBlocker, game_mode::{GameRules, Wall}, Position};
 use bevy::prelude::*;
 
 use std::collections::VecDeque;
@@ -73,7 +73,7 @@ pub struct LastTailPosition(pub Option<Position>);
 pub struct NextDirection(pub Option<Direction>);
 
 #[derive(Event)]
-pub struct EatEvent;
+pub struct EatEvent(pub bool);
 
 pub fn add_snake(
     mut commands: Commands,
@@ -117,7 +117,7 @@ pub fn snake_eating(
         for (ent, food_pos) in food_positions.iter() {
             if food_pos == head_pos {
                 commands.entity(ent).despawn();
-                eat_writer.send(EatEvent);
+                eat_writer.send(EatEvent(false));
                 score.0 += 1;
                 if score.0 <= score_blocker.0 {
                     return;
@@ -158,6 +158,8 @@ pub fn update_snake(
     mut last_tail_position: ResMut<LastTailPosition>,
     mut game_over_writer: EventWriter<crate::GameOverEvent>,
     mut input_queue: ResMut<InputQueue>,
+    walls: Query<Entity, With<Wall>>,
+    game_rules: Res<GameRules>,
 ) {
     if timer.0.tick(time.delta()).just_finished() {
         if let Some((head_entity, mut head)) = heads.iter_mut().next() {
@@ -190,6 +192,17 @@ pub fn update_snake(
 
             if segment_positions.contains(&head_pos) {
                 game_over_writer.send(crate::GameOverEvent);
+            }
+
+            // shadow mutable borrow with immutable borrow
+            let head_pos = positions.get(head_entity).unwrap();
+            if game_rules.do_collide_walls {
+                for wall_ent in walls.iter() {
+                    let wall_pos = positions.get(wall_ent).unwrap();
+                    if *head_pos == *wall_pos {
+                        game_over_writer.send(crate::GameOverEvent);
+                    }
+                }
             }
 
             segment_positions

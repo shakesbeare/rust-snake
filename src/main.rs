@@ -79,10 +79,31 @@ fn main() {
     )
     .add_systems(Update, game_over.run_if(in_state(GameState::GameOver)))
     .add_systems(Update, enter_name.run_if(in_state(GameState::EnterName)))
-    .add_systems(Update, ui_system)
     .add_systems(Update, reset_game);
 
-    // -- Graphics and Interface
+    // -- UI
+    app.add_systems(Update, playing_ui.run_if(in_state(GameState::Playing)))
+        .add_systems(Update, game_over_ui.run_if(in_state(GameState::GameOver)))
+        .add_systems(
+            Update,
+            enter_name_ui.run_if(in_state(GameState::EnterName)),
+        )
+        .add_systems(
+            Update,
+            viewing_leaderboard_ui
+                .run_if(in_state(GameState::ViewingLeaderboard)),
+        )
+        .add_systems(
+            Update,
+            viewing_leaderboard_ui.run_if(in_state(GameState::ReadyToReset)),
+        );
+
+    #[cfg(debug_assertions)]
+    {
+        app.add_systems(Update, debug_ui);
+    }
+
+    // -- Graphics
     app.add_systems(Update, size_scaling)
         .add_systems(
             Update,

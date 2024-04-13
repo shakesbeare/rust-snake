@@ -28,6 +28,21 @@ impl Default for Direction {
     }
 }
 
+impl Into<Direction> for u8 {
+    fn into(self) -> Direction {
+        let bound = self % 4;
+        if bound == 0 {
+            Direction::Up
+        } else if bound == 1 {
+            Direction::Right
+        } else if bound == 2 {
+            Direction::Down
+        } else {
+            Direction::Left
+        }
+    }
+}
+
 #[derive(Resource, Default)]
 pub struct LastPressed(pub Direction);
 
@@ -64,6 +79,7 @@ pub fn add_snake(
     mut commands: Commands,
     mut segments: ResMut<SnakeSegments>,
     mut last_tail_position: ResMut<LastTailPosition>,
+    mut dir: Direction,
 ) {
     *segments = SnakeSegments(vec![commands
         .spawn(SpriteBundle {
@@ -73,14 +89,18 @@ pub fn add_snake(
             },
             ..default()
         })
-        .insert(SnakeHead {
-            rot: Direction::Left,
-        })
+        .insert(SnakeHead { rot: dir })
         .insert(Segment)
         .insert(Position { x: 10, y: 10 })
         .insert(crate::Size::square(crate::BLOCK_SIZE))
         .id()]);
-    *last_tail_position = LastTailPosition(Some(Position { x: 11, y: 10 }));
+    let tail_pos = match dir {
+        Direction::Up => Position { x: 10, y: 9 },
+        Direction::Down => Position { x: 10, y: 11 },
+        Direction::Left => Position { x: 11, y: 10 },
+        Direction::Right => Position { x: 9, y: 10 },
+    };
+    *last_tail_position = LastTailPosition(Some(tail_pos));
 }
 
 pub fn snake_eating(
@@ -100,7 +120,7 @@ pub fn snake_eating(
                 eat_writer.send(EatEvent);
                 score.0 += 1;
                 if score.0 <= score_blocker.0 {
-                    return
+                    return;
                 }
 
                 if score.0 % 10 == 0 {

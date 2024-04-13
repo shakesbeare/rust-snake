@@ -10,6 +10,7 @@ pub mod ui;
 use bevy::prelude::*;
 use cheats::ScoreBlocker;
 use futures::Future;
+use rand::random;
 use score::LeaderboardEarned;
 use score::HIGHSCORES;
 use snake::TickAccum;
@@ -353,11 +354,13 @@ pub fn reset_game(
     for ent in food.iter().chain(segments.iter()) {
         commands.entity(ent).despawn();
     }
+    let rand: u8 = random();
+    let dir: snake::Direction = rand.into();
 
     next_state.set(GameState::Playing);
-    crate::snake::add_snake(commands, segments_res, last_tail_position);
+    crate::snake::add_snake(commands, segments_res, last_tail_position, dir);
     eat_writer.send(crate::snake::EatEvent);
-    next_direction.0 = Some(crate::snake::Direction::Left);
+    next_direction.0 = Some(dir);
     tick_accum.0 = TICK_RATE;
     tick_timer.0 = Timer::from_seconds(1. / TICK_RATE, TimerMode::Repeating);
     score.0 = 0;

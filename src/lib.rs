@@ -5,6 +5,7 @@ pub mod debug;
 pub mod food;
 pub mod score;
 pub mod snake;
+pub mod ui;
 
 use bevy::prelude::*;
 use cheats::ScoreBlocker;
@@ -68,13 +69,16 @@ pub struct GameOverEvent;
 pub struct ViewLeaderboardEvent;
 
 #[derive(Event)]
-pub struct EnterNameEvent;
+pub struct CalcHighscoresEvent;
 
 #[derive(Event)]
 pub struct RestartEvent;
 
 #[derive(Resource)]
 pub struct TickTimer(pub Timer);
+
+#[derive(Resource)]
+pub struct Name(pub String);
 
 #[cfg(not(target_arch = "wasm32"))]
 pub fn run_async<F>(future: F)
@@ -202,37 +206,6 @@ pub fn setup(
         transform: Transform::from_translation(Vec3::new(0.0, -301.0, 0.0)),
         ..default()
     });
-
-    commands
-        .spawn(
-            TextBundle::from_sections([
-                TextSection::new(
-                    "Score: ",
-                    TextStyle {
-                        font: asset_server.load("fonts/roboto-thin.ttf"),
-                        font_size: 50.,
-                        color: Color::BEIGE,
-                    },
-                ),
-                TextSection::new(
-                    "0",
-                    TextStyle {
-                        font: asset_server.load("fonts/roboto-thin.ttf"),
-                        font_size: 50.,
-                        color: Color::BEIGE,
-                    },
-                ),
-            ])
-            .with_text_justify(JustifyText::Left)
-            .with_style(Style {
-                align_self: AlignSelf::FlexStart,
-                position_type: PositionType::Absolute,
-                left: Val::Px(12.),
-                top: Val::Px(10.),
-                ..default()
-            }),
-        )
-        .insert(crate::score::ScoreText);
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -240,92 +213,39 @@ pub fn game_over(
     mut commands: Commands,
     mut reader: EventReader<GameOverEvent>,
     food: Query<Entity, With<crate::food::Food>>,
-    text: Query<Entity, With<crate::score::ScoreText>>,
     segments: Query<Entity, With<crate::snake::Segment>>,
     mut next_state: ResMut<NextState<GameState>>,
     state: Res<State<GameState>>,
-    asset_server: Res<AssetServer>,
-    score: Res<crate::score::Score>,
-    mut enter_name_event: EventWriter<EnterNameEvent>,
+    mut enter_name_event: EventWriter<CalcHighscoresEvent>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
 ) {
     // despawn all text, snake segments, and food
     if reader.read().next().is_some() {
         next_state.set(GameState::GameOver);
 
-        for ent in food.iter().chain(segments.iter()).chain(text.iter()) {
+        for ent in food.iter().chain(segments.iter()) {
             commands.entity(ent).despawn();
         }
 
         // Game Over screen
-        commands
-            .spawn(
-                TextBundle::from_sections([
-                    TextSection::new(
-                        "Game Over\n",
-                        TextStyle {
-                            font: asset_server.load("fonts/roboto-thin.ttf"),
-                            font_size: 50.,
-                            color: Color::BEIGE,
-                        },
-                    ),
-                    TextSection::new(
-                        "Score: ",
-                        TextStyle {
-                            font: asset_server.load("fonts/roboto-thin.ttf"),
-                            font_size: 50.,
-                            color: Color::BEIGE,
-                        },
-                    ),
-                    TextSection::new(
-                        format!("{}", score.0),
-                        TextStyle {
-                            font: asset_server.load("fonts/roboto-thin.ttf"),
-                            font_size: 50.,
-                            color: Color::BEIGE,
-                        },
-                    ),
-                    TextSection::new(
-                        "\nPress any key to continue",
-                        TextStyle {
-                            font: asset_server.load("fonts/roboto-thin.ttf"),
-                            font_size: 35.,
-                            color: Color::BEIGE,
-                        },
-                    ),
-                ])
-                .with_text_justify(JustifyText::Center)
-                .with_style(Style {
-                    justify_self: JustifySelf::Center,
-                    align_self: AlignSelf::Center,
-                    position_type: PositionType::Absolute,
-                    ..default()
-                }),
-            )
-            .insert(crate::score::ScoreText);
+        // unshow score text
+        // show game over text
     }
 
     if state.get() == &GameState::GameOver
         && keyboard_input.get_pressed().next().is_some()
     {
         next_state.set(GameState::EnterName);
-        enter_name_event.send(EnterNameEvent);
+        enter_name_event.send(CalcHighscoresEvent);
     }
 }
 
-pub fn enter_name_screen(
+pub fn calc_highscores(
     score: Res<crate::score::Score>,
-    text: Query<Entity, With<crate::score::ScoreText>>,
-    asset_server: Res<AssetServer>,
     mut leaderboard_place_earned: ResMut<crate::score::LeaderboardEarned>,
-    mut enter_name_event: EventReader<EnterNameEvent>,
-    mut commands: Commands,
+    mut calc_highscores_event: EventReader<CalcHighscoresEvent>,
 ) {
-    if enter_name_event.read().next().is_some() {
-        for ent in text.iter() {
-            commands.entity(ent).despawn();
-        }
-
+    if calc_highscores_event.read().next().is_some() {
         let hs_arc = HIGHSCORES.get().unwrap();
         let highscores = hs_arc.lock().unwrap();
         let mut i = 0;
@@ -333,45 +253,11 @@ pub fn enter_name_screen(
             i += 1;
         }
 
-        let mut highscore_text =
-            format!("Your score: {}\nEnter Name:\n", score.0);
         if i > 0 {
             *leaderboard_place_earned = LeaderboardEarned::Placed(i as u8);
-            highscore_text =
-                format!("New Highscore!: {}\nEnter Name:", score.0);
         } else {
             *leaderboard_place_earned = LeaderboardEarned::NotPlaced;
         }
-
-        commands
-            .spawn(
-                TextBundle::from_sections([
-                    TextSection::new(
-                        highscore_text,
-                        TextStyle {
-                            font: asset_server.load("fonts/roboto-thin.ttf"),
-                            font_size: 50.,
-                            color: Color::BEIGE,
-                        },
-                    ),
-                    TextSection::new(
-                        "",
-                        TextStyle {
-                            font: asset_server.load("fonts/roboto-thin.ttf"),
-                            font_size: 35.,
-                            color: Color::BEIGE,
-                        },
-                    ),
-                ])
-                .with_text_justify(JustifyText::Center)
-                .with_style(Style {
-                    justify_self: JustifySelf::Center,
-                    align_self: AlignSelf::Center,
-                    position_type: PositionType::Absolute,
-                    ..default()
-                }),
-            )
-            .insert(crate::score::ScoreText);
     }
 }
 
@@ -379,20 +265,19 @@ pub fn enter_name(
     mut next_state: ResMut<NextState<GameState>>,
     mut ev_char: EventReader<ReceivedCharacter>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
-    mut string: Local<String>,
-    mut text: Query<&mut Text, With<crate::score::ScoreText>>,
+    mut name: ResMut<Name>,
     mut leaderboard_event: EventWriter<ViewLeaderboardEvent>,
     mut acquire_highscores: EventWriter<crate::score::AcquireHighscores>,
     mut send_highscores: EventWriter<crate::score::SendHighscores>,
     score: Res<crate::score::Score>,
 ) {
     if keyboard_input.just_pressed(KeyCode::Enter) {
-        *string = string.chars().filter(|c| c.is_alphanumeric()).collect();
-        if (*string).is_empty() {
-            *string = "Anonymous".to_string();
+        name.0 = name.0.chars().filter(|c| c.is_alphanumeric()).collect();
+        if name.0.is_empty() {
+            name.0 = "Anonymous".to_string();
         }
         let highscore = crate::score::Highscore {
-            name: string.clone(),
+            name: name.0.clone(),
             score: score.0,
         };
 
@@ -400,7 +285,7 @@ pub fn enter_name(
         send_highscores.send(crate::score::SendHighscores(highscore));
         acquire_highscores.send(crate::score::AcquireHighscores);
 
-        string.clear();
+        name.0.clear();
 
         // show leaderboard
         next_state.set(GameState::ViewingLeaderboard);
@@ -410,46 +295,33 @@ pub fn enter_name(
     // wasm does not send ReceivedCharacter events for backspace
     #[cfg(target_arch = "wasm32")]
     if keyboard_input.just_pressed(KeyCode::Backspace) {
-        string.pop();
+        name.0.pop();
     }
 
     for ev in ev_char.read() {
         if keyboard_input.just_pressed(KeyCode::Backspace) {
-            string.pop();
+            name.0.pop();
             continue;
         }
         // if keyboard_input.just_pressed(KeyCode::Backspace) {
         // }
-        if string.len() <= 10 && ev.char.is_ascii() {
+        if name.0.len() <= 10 && ev.char.is_ascii() {
             if ev.char == "\n" || ev.char == "\r" {
                 continue;
             }
-            string.push(ev.char.chars().next().unwrap());
-        }
-    }
-
-    for mut text in text.iter_mut() {
-        if string.is_empty() {
-            text.sections[1].value = " ".to_string();
-        } else {
-            text.sections[1].value = string.to_string();
+            name.0.push(ev.char.chars().next().unwrap());
         }
     }
 }
 
 pub fn leaderboard(
-    mut commands: Commands,
     state: Res<State<GameState>>,
     mut next_state: ResMut<NextState<GameState>>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
-    text: Query<Entity, With<crate::score::ScoreText>>,
     asset_server: Res<AssetServer>,
     mut leaderboard_event: EventReader<ViewLeaderboardEvent>,
 ) {
     if leaderboard_event.read().next().is_some() {
-        for ent in text.iter() {
-            commands.entity(ent).despawn();
-        }
         let mut texts = vec![];
         let hs_arc = HIGHSCORES.get().unwrap();
         let highscores = hs_arc.lock().unwrap();
@@ -474,51 +346,8 @@ pub fn leaderboard(
         }
 
         if state.get() == &GameState::ViewingLeaderboard {
-            // despawn all text
-            // spawn leaderboard text
-            for ent in text.iter() {
-                commands.entity(ent).despawn();
-            }
-
-            let mut texts = texts.into_iter();
 
             // leaderboard screen
-            commands
-                .spawn(
-                    TextBundle::from_sections([
-                        TextSection::new(
-                            "High Scores\n\n",
-                            TextStyle {
-                                font: asset_server
-                                    .load("fonts/roboto-thin.ttf"),
-                                font_size: 50.,
-                                color: Color::BEIGE,
-                            },
-                        ),
-                        texts.next().unwrap(),
-                        texts.next().unwrap(),
-                        texts.next().unwrap(),
-                        texts.next().unwrap(),
-                        texts.next().unwrap(),
-                        TextSection::new(
-                            "\nPress any key to continue",
-                            TextStyle {
-                                font: asset_server
-                                    .load("fonts/roboto-thin.ttf"),
-                                font_size: 35.,
-                                color: Color::BEIGE,
-                            },
-                        ),
-                    ])
-                    .with_text_justify(JustifyText::Center)
-                    .with_style(Style {
-                        justify_self: JustifySelf::Center,
-                        align_self: AlignSelf::Center,
-                        position_type: PositionType::Absolute,
-                        ..default()
-                    }),
-                )
-                .insert(crate::score::ScoreText);
         }
     } else if keyboard_input.get_pressed().next().is_some() {
         next_state.set(GameState::ReadyToReset);
@@ -546,11 +375,9 @@ pub fn reset_game(
     mut next_direction: ResMut<crate::snake::NextDirection>,
     mut tick_accum: ResMut<TickAccum>,
     mut tick_timer: ResMut<crate::TickTimer>,
-    text: Query<Entity, With<crate::score::ScoreText>>,
     mut score: ResMut<crate::score::Score>,
     mut score_blocker: ResMut<ScoreBlocker>,
     last_tail_position: ResMut<crate::snake::LastTailPosition>,
-    asset_server: Res<AssetServer>,
     mut reset_reader: EventReader<ResetEvent>,
     food: Query<Entity, With<crate::food::Food>>,
     segments: Query<Entity, With<crate::snake::Segment>>,
@@ -559,37 +386,9 @@ pub fn reset_game(
         return;
     }
 
-    for ent in text.iter().chain(food.iter()).chain(segments.iter()) {
+    for ent in food.iter().chain(segments.iter()) {
         commands.entity(ent).despawn();
     }
-    commands
-        .spawn(
-            TextBundle::from_sections([
-                TextSection::new(
-                    "Score: ",
-                    TextStyle {
-                        font: asset_server.load("fonts/roboto-thin.ttf"),
-                        font_size: 50.,
-                        color: Color::BEIGE,
-                    },
-                ),
-                TextSection::new(
-                    "0",
-                    TextStyle {
-                        font: asset_server.load("fonts/roboto-thin.ttf"),
-                        font_size: 50.,
-                        color: Color::BEIGE,
-                    },
-                ),
-            ])
-            .with_text_justify(JustifyText::Left)
-            .with_style(Style {
-                align_self: AlignSelf::FlexStart,
-                position_type: PositionType::Absolute,
-                ..default()
-            }),
-        )
-        .insert(crate::score::ScoreText);
 
     next_state.set(GameState::Playing);
     crate::snake::add_snake(commands, segments_res, last_tail_position);

@@ -116,25 +116,6 @@ pub fn upload_scores(mut send_highscores: EventReader<SendHighscores>) {
     }
 }
 
-// fn default() -> Self {
-//     let client = reqwest::Client::new();
-//     let res = bevy::tasks::block_on(client.get("https://berintmoffett.com/api/snake-highscores").send()).unwrap();
-//     let text = bevy::tasks::block_on(res.text()).unwrap();
-//     let highscores = serde_json::from_str::<Highscores>(&text);
-//     match highscores {
-//         Ok(v) => v,
-//         Err(e) => panic!("Error: {:#?}", e),
-//     }
-// }
-
 #[derive(Component)]
 pub struct ScoreText;
 
-pub fn score_update(
-    mut query: Query<&mut Text, With<ScoreText>>,
-    score: Res<Score>,
-) {
-    for mut text in query.iter_mut() {
-        text.sections[1].value = format!("{}", score.0)
-    }
-}

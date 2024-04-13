@@ -2,10 +2,12 @@ use bevy::log::Level;
 use bevy::log::LogPlugin;
 use bevy::prelude::*;
 
+use bevy_egui::EguiPlugin;
 use rust_snake::cheats::*;
 use rust_snake::food::*;
 use rust_snake::score::*;
 use rust_snake::snake::*;
+use rust_snake::ui::*;
 use rust_snake::*;
 
 #[cfg(debug_assertions)]
@@ -37,7 +39,8 @@ fn main() {
             TimerMode::Once,
         )))
         .insert_resource(TickAccum(TICK_RATE))
-        .insert_resource(ScoreBlocker(0));
+        .insert_resource(ScoreBlocker(0))
+        .insert_resource(rust_snake::Name("".to_string()));
 
     // States and Resources
     app.init_state::<GameState>()
@@ -45,7 +48,7 @@ fn main() {
         .init_state::<WindowState>()
         .add_event::<EatEvent>()
         .add_event::<GameOverEvent>()
-        .add_event::<EnterNameEvent>()
+        .add_event::<CalcHighscoresEvent>()
         .add_event::<ViewLeaderboardEvent>()
         .add_event::<AcquireHighscores>()
         .add_event::<TriggerDownload>()
@@ -54,7 +57,7 @@ fn main() {
 
     // Systems ----------------
     // Startup
-    app.add_systems(Startup, (init_scores, setup, add_snake).chain());
+    app.add_systems(Startup, (init_scores, setup, add_snake, setup_ui).chain());
 
     // Update
     // -- Core
@@ -66,7 +69,6 @@ fn main() {
             update_snake,
             snake_eating,
             snake_growth,
-            score_update,
             quick_speed,
             quick_reset,
             game_over,
@@ -77,13 +79,14 @@ fn main() {
     )
     .add_systems(Update, game_over.run_if(in_state(GameState::GameOver)))
     .add_systems(Update, enter_name.run_if(in_state(GameState::EnterName)))
+    .add_systems(Update, ui_system)
     .add_systems(Update, reset_game);
 
     // -- Graphics and Interface
     app.add_systems(Update, size_scaling)
         .add_systems(
             Update,
-            enter_name_screen.run_if(in_state(GameState::EnterName)),
+            calc_highscores.run_if(in_state(GameState::EnterName)),
         )
         .add_systems(
             Update,
@@ -130,13 +133,14 @@ fn main() {
                 filter: "".to_string(),
                 update_subscriber: None,
             }),
-    );
+    )
+    .add_plugins(EguiPlugin);
 
     // Debug only!!
     #[cfg(debug_assertions)]
     {
-        app.add_systems(Update, (set_stats, update_stats_display));
-        app.add_systems(Startup, setup_stats_display);
+        app.add_systems(Update, (set_stats /*update_stats_display*/,));
+        // app.add_systems(Startup, setup_stats_display);
         app.insert_resource::<DebugStats>(DebugStats::default())
             .insert_resource::<FrameRate>(FrameRate::new())
             .insert_resource::<LastFrameTime>(LastFrameTime {

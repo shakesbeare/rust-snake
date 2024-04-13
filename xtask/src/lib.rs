@@ -17,7 +17,7 @@ pub fn get_cargo_version() -> Result<String> {
 
     let version_string = match version {
         cargo_toml::Inheritable::Set(v) => v,
-        cargo_toml::Inheritable::Inherited { workspace } => {
+        cargo_toml::Inheritable::Inherited { .. } => {
             unreachable!();
         },
     };

@@ -25,7 +25,7 @@ pub fn quick_reset(
     keyboard_input: Res<ButtonInput<KeyCode>>,
     mut reset_writer: EventWriter<ResetEvent>,
 ) {
-    if keyboard_input.pressed(KeyCode::Backslash) {
+    if keyboard_input.just_pressed(KeyCode::Backslash) {
         reset_writer.send(ResetEvent);
     }
 }

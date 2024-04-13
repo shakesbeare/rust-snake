@@ -28,9 +28,9 @@ impl Default for Direction {
     }
 }
 
-impl Into<Direction> for u8 {
-    fn into(self) -> Direction {
-        let bound = self % 4;
+impl From<u8> for Direction {
+    fn from(val: u8) -> Self {
+        let bound = val % 4;
         if bound == 0 {
             Direction::Up
         } else if bound == 1 {
@@ -79,7 +79,7 @@ pub fn add_snake(
     mut commands: Commands,
     mut segments: ResMut<SnakeSegments>,
     mut last_tail_position: ResMut<LastTailPosition>,
-    mut dir: Direction,
+    dir: Direction,
 ) {
     *segments = SnakeSegments(vec![commands
         .spawn(SpriteBundle {

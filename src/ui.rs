@@ -2,7 +2,7 @@ use crate::score::{LeaderboardEarned, Score, HIGHSCORES};
 use crate::{GameState, ResetEvent};
 use bevy::prelude::*;
 use bevy_egui::egui::{self, FontId};
-use bevy_egui::egui::{RichText, WidgetText};
+use bevy_egui::egui::RichText;
 use bevy_egui::EguiContexts;
 
 #[cfg(debug_assertions)]
@@ -26,7 +26,7 @@ pub fn menu_ui(
     mut menu_state: ResMut<MenuState>,
     mut contexts: EguiContexts,
 ) {
-    let mut ctx = contexts.ctx_mut();
+    let ctx = contexts.ctx_mut();
     egui::CentralPanel::default().show(ctx, |ui| {
         ui.vertical_centered(|ui| {
             ui.add_space(301.0 - 100.0);
